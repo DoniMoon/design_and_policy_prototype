@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AAT — Amplification Accountability Toolkit</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0d1117;--s1:#161b22;--s2:#21262d;--bd:#30363d;--tx:#e6edf3;--mu:#8b949e;--ac:#388bfd;--gn:#238636;--rd:#da3633;--yw:#d29922;}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100vh;overflow:hidden;background:var(--bg);color:var(--tx);font:12px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+
+/* ── Header ── */
+header{height:44px;background:var(--s1);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 26px;gap:10px}
+.logo{font-weight:700;font-size:14px;white-space:nowrap}
+.logo b{color:var(--ac)}
+.vr{width:1px;height:18px;background:var(--bd);flex-shrink:0}
+.sub{font-size:11px;color:var(--mu);white-space:nowrap}
+.hbadge{margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700;background:#1f6feb18;color:var(--ac);border:1px solid #1f6feb33;white-space:nowrap}
+
+/* ── Stepper ── */
+nav{height:36px;background:var(--s1);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 26px}
+.step{display:flex;align-items:center;gap:6px;padding:0 14px;height:100%;font-size:11px;color:var(--mu);cursor:pointer;border-bottom:2px solid transparent;transition:.15s;user-select:none;white-space:nowrap}
+.step:hover{color:var(--tx)}
+.step.on{color:var(--ac);border-bottom-color:var(--ac)}
+.step.dn{color:var(--gn)}
+.sn{width:17px;height:17px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.step.dn .sn{background:var(--gn);border-color:var(--gn);color:#fff}
+.step.dn .sn::after{content:'✓'}
+.step.dn .sn span{display:none}
+.sa{color:var(--bd);font-size:13px;user-select:none}
+
+/* ── Wrap ── */
+.wrap{height:calc(100vh - 80px);padding:11px 22px;overflow:hidden}
+.pg{display:none;height:100%;gap:10px}
+#p1.on,#p2.on,#p3.on{display:grid}
+#p4.on{display:flex;flex-direction:column}
+
+/* ── Card ── */
+.c{background:var(--s1);border:1px solid var(--bd);border-radius:6px;padding:10px 13px;overflow:hidden}
+.ct{font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;padding-bottom:6px;margin-bottom:8px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:5px}
+
+/* ── Form ── */
+.fl{font-size:10px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px}
+input[type=text],input[type=date],textarea,select{width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:4px;color:var(--tx);padding:4px 8px;font:12px/1.4 inherit;outline:none;transition:border-color .15s}
+input:focus,textarea:focus,select:focus{border-color:var(--ac)}
+textarea{resize:none}
+.gr{display:grid;gap:5px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:1fr 1fr 1fr}
+
+/* ── Checkbox item ── */
+.ci{display:flex;align-items:center;gap:5px;background:var(--s2);border:1px solid var(--bd);border-radius:4px;padding:4px 7px;cursor:pointer;user-select:none;transition:.12s;font-size:11px}
+.ci:hover,.ci.on{border-color:var(--ac);background:#1f6feb14;color:var(--tx)}
+.ci input{accent-color:var(--ac);width:11px;height:11px;flex-shrink:0}
+
+/* ── Radio pills ── */
+.rg{display:flex;gap:4px;flex-shrink:0}
+.rb{padding:3px 8px;border-radius:4px;border:1px solid var(--bd);background:var(--s2);cursor:pointer;font-size:11px;font-weight:500;transition:.12s;user-select:none;white-space:nowrap}
+.rb input{display:none}
+.yes{border-color:var(--gn)!important;background:#23863618!important;color:#3fb950!important}
+.no{border-color:var(--rd)!important;background:#da363318!important;color:#f85149!important}
+.unk{border-color:var(--yw)!important;background:#d2992218!important;color:#f0c040!important}
+
+/* ── Buttons ── */
+.btn{padding:5px 13px;border-radius:4px;font:600 11px/1.4 inherit;cursor:pointer;border:none;transition:.12s;white-space:nowrap}
+.bp{background:#1f6feb;color:#fff}.bp:hover{background:var(--ac)}
+.bo{background:transparent;color:var(--tx);border:1px solid var(--bd)}.bo:hover{border-color:var(--ac);color:var(--ac)}
+.bs{background:var(--gn);color:#fff}.bs:hover{background:#2ea043}
+.bsm{padding:3px 9px;font-size:10px}
+
+/* ── Tags ── */
+.tag{display:inline-block;padding:1px 6px;border-radius:10px;font-size:10px;font-weight:600}
+.tg{background:#da363320;color:#f85149;border:1px solid #da363340}
+.tm{background:#d2992220;color:#f0c040;border:1px solid #d2992240}
+.tl{background:#23863620;color:#3fb950;border:1px solid #23863640}
+
+/* ── Metrics ── */
+.mc{background:var(--s2);border:1px solid var(--bd);border-radius:6px;padding:10px 13px;flex:1;min-width:0}
+.ml{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px}
+.mv{font-size:22px;font-weight:700;line-height:1.1}
+.ms{font-size:10px;color:var(--mu);margin-top:2px}
+
+/* ── Exposure bars ── */
+.er{display:grid;grid-template-columns:138px 1fr 56px;align-items:center;gap:8px;margin-bottom:6px}
+.el{font-size:11px;color:var(--mu);white-space:nowrap}
+.eb{height:7px;background:var(--s2);border-radius:3px;overflow:hidden}
+.ef{height:100%;border-radius:3px}
+.ev{font-size:11px;text-align:right;white-space:nowrap}
+
+/* ── Notes ── */
+.note{display:flex;gap:7px;padding:5px 0;border-bottom:1px solid var(--bd);font-size:11px;line-height:1.5;color:var(--mu)}
+.note:last-child{border:none;padding-bottom:0}
+.note strong{color:var(--tx);font-weight:600}
+.nd{width:5px;height:5px;border-radius:50%;margin-top:5px;flex-shrink:0}
+
+/* ── Doc items ── */
+.di{display:flex;align-items:center;gap:8px;padding:6px 9px;background:var(--s2);border:1px solid var(--bd);border-radius:4px;margin-bottom:4px;cursor:pointer;transition:.12s;font-size:11px}
+.di:hover{border-color:var(--ac)}
+.dn-{font-weight:600}
+.ds-{font-size:10px;color:var(--mu)}
+
+/* ── Alert ── */
+.al{border-radius:4px;padding:6px 10px;font-size:11px;border-left:3px solid;margin-bottom:0}
+.alw{background:#d2992211;border-color:var(--yw);color:#f0c040}
+.als{background:#23863611;border-color:var(--gn);color:#3fb950}
+
+/* ── Upload ── */
+.up{border:1.5px dashed var(--bd);border-radius:5px;padding:10px;text-align:center;color:var(--mu);font-size:11px;cursor:pointer;transition:.15s}
+.up:hover{border-color:var(--ac);color:var(--ac)}
+
+/* ── Score ring ── */
+.ring{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0}
+.ring::before{content:'';position:absolute;width:58px;height:58px;border-radius:50%;background:var(--s1)}
+.ri{position:relative;z-index:1;text-align:center}
+.rv{font-size:16px;font-weight:700;line-height:1}
+.rl{font-size:9px;color:var(--mu)}
+
+/* ── Table ── */
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{text-align:left;padding:5px 9px;border-bottom:1px solid var(--bd);color:var(--mu);font-size:10px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;position:sticky;top:0;background:var(--s1);z-index:1}
+td{padding:5px 9px;border-bottom:1px solid var(--bd);vertical-align:middle}
+tr:last-child td{border:none}
+tr:hover td{background:var(--s2)}
+input[type=checkbox]{accent-color:var(--ac);width:12px;height:12px;cursor:pointer}
+
+/* ── Nexus question rows ── */
+.nq-row{display:grid;grid-template-columns:22px 1fr auto 155px;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd)}
+.nq-row:last-child{border:none;padding-bottom:0}
+.nqn{font-size:11px;color:var(--mu);font-weight:600}
+.nqt{font-size:12px}
+input.nqe{width:100%}
+
+/* ── Hosting/Amp summary ── */
+.ha{border-radius:5px;padding:9px 11px;font-size:11px}
+.ha-g{background:#23863611;border:1px solid #23863630}
+.ha-r{background:#da363311;border:1px solid #da363330}
+.ha ul{padding-left:14px;color:var(--mu);line-height:1.8;margin-top:5px}
+
+/* ── Chart wrap ── */
+.cw{position:relative;height:100%;min-height:0}
+</style>
+</head>
+<body>
+
+<!-- ══ Header ══ -->
+<header>
+  <div class="logo">AAT · <b>Amplification Accountability Toolkit</b></div>
+  <div class="vr"></div>
+  <div class="sub">Evidence Infrastructure for Algorithmic Hate-Crime Cases</div>
+  <div class="hbadge">⚖ Case: AAT-2026-0041 · ACLU NorCal</div>
+</header>
+
+<!-- ══ Stepper ══ -->
+<nav>
+  <div class="step on" id="s1" onclick="go(1)"><div class="sn"><span>1</span></div>Case Intake</div>
+  <div class="sa">›</div>
+  <div class="step" id="s2" onclick="go(2)"><div class="sn"><span>2</span></div>Amplification Nexus</div>
+  <div class="sa">›</div>
+  <div class="step" id="s3" onclick="go(3)"><div class="sn"><span>3</span></div>ATS Request Builder</div>
+  <div class="sa">›</div>
+  <div class="step" id="s4" onclick="go(4)"><div class="sn"><span>4</span></div>Auditor Dashboard</div>
+</nav>
+
+<!-- ══════════════════════════════════
+     WRAP
+══════════════════════════════════ -->
+<div class="wrap">
+
+<!-- ── PAGE 1: CASE INTAKE ── grid 3fr 2fr -->
+<div class="pg" id="p1" style="grid-template-columns:3fr 2fr">
+
+  <!-- Left: Incident + Platform -->
+  <div style="display:flex;flex-direction:column;gap:9px;overflow:hidden;min-height:0">
+
+    <div class="c">
+      <div class="ct">📋 Incident</div>
+      <div style="margin-bottom:6px"><div class="fl">Case Title</div><input type="text" value="Attack on Sikh community center — Sacramento, CA"></div>
+      <div class="gr g2" style="margin-bottom:6px">
+        <div><div class="fl">Date</div><input type="date" value="2026-03-14"></div>
+        <div><div class="fl">Location</div><input type="text" value="Sacramento, CA"></div>
+      </div>
+      <div style="margin-bottom:6px">
+        <div class="fl">Hate-Crime Basis</div>
+        <div class="gr g3">
+          <label class="ci on"><input type="checkbox" checked onchange="tc(this)">Race / Ethnicity</label>
+          <label class="ci on"><input type="checkbox" checked onchange="tc(this)">Religion</label>
+          <label class="ci"><input type="checkbox" onchange="tc(this)">National Origin</label>
+          <label class="ci"><input type="checkbox" onchange="tc(this)">Sexual Orientation</label>
+          <label class="ci"><input type="checkbox" onchange="tc(this)">Gender Identity</label>
+          <label class="ci"><input type="checkbox" onchange="tc(this)">Disability</label>
+        </div>
+      </div>
+      <div>
+        <div class="fl">Legal Hook</div>
+        <div class="gr g3">
+          <label class="ci on"><input type="checkbox" checked onchange="tc(this)">18 U.S.C. §249</label>
+          <label class="ci on"><input type="checkbox" checked onchange="tc(this)">Cal. Penal §422.55</label>
+          <label class="ci"><input type="checkbox" onchange="tc(this)">42 U.S.C. §1985</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="c" style="flex:1;min-height:0;display:flex;flex-direction:column">
+      <div class="ct">🌐 Platform Connections</div>
+      <div class="gr g3" style="margin-bottom:8px">
+        <label class="ci on"><input type="checkbox" checked onchange="tc(this)">YouTube</label>
+        <label class="ci on"><input type="checkbox" checked onchange="tc(this)">X (Twitter)</label>
+        <label class="ci"><input type="checkbox" onchange="tc(this)">Facebook</label>
+        <label class="ci"><input type="checkbox" onchange="tc(this)">TikTok</label>
+        <label class="ci"><input type="checkbox" onchange="tc(this)">Telegram</label>
+        <label class="ci"><input type="checkbox" onchange="tc(this)">Reddit</label>
+      </div>
+      <div class="gr g2">
+        <div><div class="fl">Perpetrator Account</div><input type="text" value="@reclaimgoldenstate2026 (YouTube, public)"></div>
+        <div><div class="fl">Related Channel / Group</div><input type="text" value="'Reclaim Golden State' — YouTube"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right: Evidence + Org + Submit -->
+  <div style="display:flex;flex-direction:column;gap:9px;overflow:hidden;min-height:0">
+
+    <div class="c">
+      <div class="ct">📎 Supporting Materials</div>
+      <div class="gr g2" style="margin-bottom:7px">
+        <label class="ci on"><input type="checkbox" checked onchange="tc(this)">DA / Police Report</label>
+        <label class="ci on"><input type="checkbox" checked onchange="tc(this)">Device Screenshots</label>
+        <label class="ci on"><input type="checkbox" checked onchange="tc(this)">News Coverage</label>
+        <label class="ci"><input type="checkbox" onchange="tc(this)">Witness Statement</label>
+        <label class="ci on"><input type="checkbox" checked onchange="tc(this)">Community Complaints</label>
+        <label class="ci"><input type="checkbox" onchange="tc(this)">Expert Declaration</label>
+      </div>
+      <div class="up" id="upz" onclick="fakeUp()">📁 Drop files or click to upload</div>
+      <div id="upmsg" class="al als" style="display:none;margin-top:6px">✔ DA_complaint.pdf · device_screenshots.zip · article.pdf</div>
+    </div>
+
+    <div class="c" style="flex:1;min-height:0;display:flex;flex-direction:column;justify-content:space-between">
+      <div>
+        <div class="ct">⚖️ Submitting Organization</div>
+        <div class="gr g2" style="margin-bottom:6px">
+          <div><div class="fl">Organization</div><input type="text" value="ACLU of Northern California"></div>
+          <div><div class="fl">Attorney</div><input type="text" value="Sarah K. Mendez, Esq."></div>
+        </div>
+        <div class="gr g2" style="margin-bottom:8px">
+          <div>
+            <div class="fl">Role</div>
+            <select><option selected>Civil Rights Organization</option><option>Victim's Attorney</option><option>State AG Office</option></select>
+          </div>
+          <div><div class="fl">Contact</div><input type="text" value="smendez@aclunc.org"></div>
+        </div>
+        <div class="al alw">⚠ Authorized legal proceedings only. All requests require court authorization before platform data is disclosed.</div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+        <button class="btn bo" onclick="alert('Draft saved: AAT-2026-0041')">Save Draft</button>
+        <button class="btn bp" onclick="go(2)">Continue → Nexus Checklist</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── PAGE 2: NEXUS CHECKLIST ── grid 7fr 3fr -->
+<div class="pg" id="p2" style="grid-template-columns:7fr 3fr">
+
+  <!-- Left: 5 question rows -->
+  <div class="c" style="display:flex;flex-direction:column;overflow:hidden">
+    <div class="ct">📋 Prima Facie Amplification Nexus — 5-Factor Threshold Assessment</div>
+    <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between">
+
+      <div class="nq-row">
+        <span class="nqn">Q1</span>
+        <span class="nqt">Perpetrator was an active user of the identified platform(s)?</span>
+        <div class="rg">
+          <label class="rb yes" id="q1y" onclick="sq(1,'yes')"><input type="radio" name="q1">✓ Yes</label>
+          <label class="rb" id="q1n" onclick="sq(1,'no')"><input type="radio" name="q1">✗ No</label>
+          <label class="rb" id="q1u" onclick="sq(1,'unk')"><input type="radio" name="q1">? Unknown</label>
+        </div>
+        <input type="text" class="nqe" value="Device forensics, Exhibit B">
+      </div>
+
+      <div class="nq-row">
+        <span class="nqn">Q2</span>
+        <span class="nqt">Evidence of repeated exposure to group-targeted hostile content before the incident?</span>
+        <div class="rg">
+          <label class="rb yes" id="q2y" onclick="sq(2,'yes')"><input type="radio" name="q2">✓ Yes</label>
+          <label class="rb" id="q2n" onclick="sq(2,'no')"><input type="radio" name="q2">✗ No</label>
+          <label class="rb" id="q2u" onclick="sq(2,'unk')"><input type="radio" name="q2">? Unknown</label>
+        </div>
+        <input type="text" class="nqe" value="15+ videos in 90-day window">
+      </div>
+
+      <div class="nq-row">
+        <span class="nqn">Q3</span>
+        <span class="nqt">Evidence that exposure was algorithmically recommended, not solely searched or subscribed?</span>
+        <div class="rg">
+          <label class="rb yes" id="q3y" onclick="sq(3,'yes')"><input type="radio" name="q3">✓ Yes</label>
+          <label class="rb" id="q3n" onclick="sq(3,'no')"><input type="radio" name="q3">✗ No</label>
+          <label class="rb" id="q3u" onclick="sq(3,'unk')"><input type="radio" name="q3">? Unknown</label>
+        </div>
+        <input type="text" class="nqe" value="Autoplay chain screenshots, Exhibit C">
+      </div>
+
+      <div class="nq-row">
+        <span class="nqn">Q4</span>
+        <span class="nqt">Related content was reported or flagged before the incident and remained available?</span>
+        <div class="rg">
+          <label class="rb yes" id="q4y" onclick="sq(4,'yes')"><input type="radio" name="q4">✓ Yes</label>
+          <label class="rb" id="q4n" onclick="sq(4,'no')"><input type="radio" name="q4">✗ No</label>
+          <label class="rb" id="q4u" onclick="sq(4,'unk')"><input type="radio" name="q4">? Unknown</label>
+        </div>
+        <input type="text" class="nqe" value="3 community reports — 8–11 day lag">
+      </div>
+
+      <div class="nq-row" style="border:none">
+        <span class="nqn">Q5</span>
+        <span class="nqt">Content specifically targeted a protected group connected to the crime?</span>
+        <div class="rg">
+          <label class="rb yes" id="q5y" onclick="sq(5,'yes')"><input type="radio" name="q5">✓ Yes</label>
+          <label class="rb" id="q5n" onclick="sq(5,'no')"><input type="radio" name="q5">✗ No</label>
+          <label class="rb" id="q5u" onclick="sq(5,'unk')"><input type="radio" name="q5">? Unknown</label>
+        </div>
+        <input type="text" class="nqe" value="Anti-Sikh / South Asian — consistent with DA complaint">
+      </div>
+
+    </div>
+    <div class="al alw" style="margin-top:9px">ℹ This tool requests event-specific amplification logs under court supervision — not removal of lawful speech.</div>
+  </div>
+
+  <!-- Right: Score + assessment -->
+  <div style="display:flex;flex-direction:column;gap:9px">
+
+    <div class="c" style="display:flex;align-items:center;gap:14px">
+      <div class="ring" style="background:conic-gradient(var(--gn) 100%, var(--s2) 100%)">
+        <div class="ri"><div class="rv" style="color:var(--gn)">5/5</div><div class="rl">Confirmed</div></div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#3fb950;margin-bottom:3px">Strong Prima Facie Nexus</div>
+        <div style="font-size:11px;color:var(--mu)">All 5 threshold criteria confirmed. Supports preservation request &amp; ATS discovery motion.</div>
+      </div>
+    </div>
+
+    <div class="c" style="flex:1;display:flex;flex-direction:column;gap:7px">
+      <div class="ct">📊 Confirmed Factors</div>
+      <div style="display:flex;flex-direction:column;gap:5px;flex:1">
+        <div style="display:flex;align-items:center;gap:7px;font-size:11px"><span style="color:var(--gn);font-weight:700">✓</span><span>Active platform user — device forensics</span></div>
+        <div style="display:flex;align-items:center;gap:7px;font-size:11px"><span style="color:var(--gn);font-weight:700">✓</span><span>Repeated hostile exposure — 90-day window</span></div>
+        <div style="display:flex;align-items:center;gap:7px;font-size:11px"><span style="color:var(--gn);font-weight:700">✓</span><span>Algorithmic recommendation — autoplay chain</span></div>
+        <div style="display:flex;align-items:center;gap:7px;font-size:11px"><span style="color:var(--gn);font-weight:700">✓</span><span>Pre-incident flags + safety override lag</span></div>
+        <div style="display:flex;align-items:center;gap:7px;font-size:11px"><span style="color:var(--gn);font-weight:700">✓</span><span>Protected group targeted — Sikh / South Asian</span></div>
+      </div>
+      <div style="margin-top:auto;display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn bo" onclick="go(1)">← Back</button>
+        <button class="btn bs" onclick="go(3)">Generate ATS Request →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── PAGE 3: ATS REQUEST BUILDER ── grid 2fr 3fr -->
+<div class="pg" id="p3" style="grid-template-columns:2fr 3fr">
+
+  <!-- Left: Scope + Privacy + Docs -->
+  <div style="display:flex;flex-direction:column;gap:9px;overflow:hidden;min-height:0">
+
+    <div class="c">
+      <div class="ct">🎯 Request Scope</div>
+      <div style="margin-bottom:6px"><div class="fl">Platform</div>
+        <select><option selected>YouTube (Google LLC)</option><option>X Corp.</option><option>Meta Platforms</option><option>TikTok Inc.</option></select>
+      </div>
+      <div class="gr g2" style="margin-bottom:6px">
+        <div><div class="fl">From</div><input type="date" value="2025-12-14"></div>
+        <div><div class="fl">To</div><input type="date" value="2026-03-14"></div>
+      </div>
+      <div><div class="fl">Target Account / Content IDs</div>
+        <textarea style="min-height:44px">@reclaimgoldenstate2026
+Video cluster: [see Exhibit B, filed under seal]</textarea>
+      </div>
+    </div>
+
+    <div class="c">
+      <div class="ct">🔒 Privacy Minimization</div>
+      <div class="gr g2">
+        <label class="ci on"><input type="checkbox" checked onchange="tc(this)">Aggregate 3rd-party data</label>
+        <label class="ci on"><input type="checkbox" checked onchange="tc(this)">Hash unrelated IDs</label>
+        <label class="ci on"><input type="checkbox" checked onchange="tc(this)">Exclude private messages</label>
+        <label class="ci on"><input type="checkbox" checked onchange="tc(this)">Event window only</label>
+        <label class="ci on"><input type="checkbox" checked onchange="tc(this)">Protective order required</label>
+        <label class="ci on"><input type="checkbox" checked onchange="tc(this)">Redaction log included</label>
+      </div>
+    </div>
+
+    <div class="c" style="flex:1;min-height:0;display:flex;flex-direction:column">
+      <div class="ct">📄 Generated Documents</div>
+      <div style="flex:1;overflow-y:auto">
+        <div class="di" onclick="fd('Preservation_Order.pdf')"><span>📋</span><div style="flex:1"><div class="dn-">Preservation Order Letter</div><div class="ds-">Halt log deletion pending court review</div></div><button class="btn bo bsm">↓ PDF</button></div>
+        <div class="di" onclick="fd('Protective_Order.pdf')"><span>⚖️</span><div style="flex:1"><div class="dn-">Proposed Protective Order</div><div class="ds-">Sealed disclosure, auditor-only access</div></div><button class="btn bo bsm">↓ PDF</button></div>
+        <div class="di" onclick="fd('ATS_Request_Appendix.pdf')"><span>🗃️</span><div style="flex:1"><div class="dn-">ATS Request Appendix</div><div class="ds-">Technical spec, format, redaction standards</div></div><button class="btn bo bsm">↓ PDF</button></div>
+        <div class="di" onclick="fd('Special_Master_Request.pdf')"><span>👤</span><div style="flex:1"><div class="dn-">Special Master Motion</div><div class="ds-">Appoint independent technical auditor</div></div><button class="btn bo bsm">↓ PDF</button></div>
+      </div>
+      <div id="dtmsg" class="al als" style="display:none;margin-top:7px"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:9px">
+        <button class="btn bo" onclick="go(2)">← Back</button>
+        <button class="btn bp" onclick="go(4)">View Auditor Dashboard →</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right: ATS Data fields table -->
+  <div class="c" style="display:flex;flex-direction:column;min-height:0">
+    <div class="ct">🗂️ ATS Data Fields — Select Required Fields</div>
+    <div style="overflow-y:auto;flex:1">
+      <table>
+        <thead>
+          <tr><th style="width:32px"></th><th>Field</th><th>Relevance to Causation</th><th style="width:90px">Privacy Risk</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><input type="checkbox" checked></td><td><strong>Exposure Path</strong></td><td style="color:var(--mu)">Distinguish hosting vs. algorithmic amplification</td><td><span class="tag tl">Low</span></td></tr>
+          <tr><td><input type="checkbox" checked></td><td><strong>Impression Log</strong></td><td style="color:var(--mu)">Repetition intensity, temporal proximity to incident</td><td><span class="tag tl">Low</span></td></tr>
+          <tr><td><input type="checkbox" checked></td><td><strong>Ranking Position</strong></td><td style="color:var(--mu)">Prioritization vs. incidental display</td><td><span class="tag tl">Low</span></td></tr>
+          <tr><td><input type="checkbox" checked></td><td><strong>Recommendation Reason Code</strong></td><td style="color:var(--mu)">Nature of algorithmic conduct (collaborative filter, etc.)</td><td><span class="tag tm">Medium</span></td></tr>
+          <tr><td><input type="checkbox" checked></td><td><strong>Organic Baseline Estimate</strong></td><td style="color:var(--mu)">Compute Amplification Above Baseline (AAB)</td><td><span class="tag tm">Medium</span></td></tr>
+          <tr><td><input type="checkbox" checked></td><td><strong>Safety History</strong></td><td style="color:var(--mu)">Platform knowledge, safety override lag analysis</td><td><span class="tag tm">Medium</span></td></tr>
+          <tr><td><input type="checkbox" checked></td><td><strong>Velocity Metrics</strong></td><td style="color:var(--mu)">Rapid amplification detection, circuit breaker failure</td><td><span class="tag tl">Low</span></td></tr>
+          <tr><td><input type="checkbox"></td><td><strong>Cluster Concentration</strong></td><td style="color:var(--mu)">Targeted community or geographic harm pattern</td><td><span class="tag tm">Medium</span></td></tr>
+          <tr><td><input type="checkbox"></td><td><strong style="color:var(--mu)">Raw Model Weights</strong></td><td style="color:var(--mu)">Deep analysis — not required for causation</td><td><span class="tag tg">High — avoid</span></td></tr>
+          <tr><td><input type="checkbox"></td><td><strong style="color:var(--mu)">Individual User Data</strong></td><td style="color:var(--mu)">Not required; privacy risk exceeds value</td><td><span class="tag tg">High — avoid</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── PAGE 4: AUDITOR DASHBOARD ── flex-col -->
+<div class="pg" id="p4">
+
+  <!-- Row 1: Metric cards -->
+  <div style="display:flex;gap:9px;margin-bottom:9px;flex-shrink:0">
+    <div class="mc"><div class="ml">Amplification Above Baseline</div><div class="mv" style="color:var(--rd)">5.0×</div><div class="ms">Algorithmic vs. organic reach</div></div>
+    <div class="mc"><div class="ml">Safety Override Lag</div><div class="mv" style="color:var(--yw)">12 days</div><div class="ms">After first community report</div></div>
+    <div class="mc"><div class="ml">Repetition Intensity</div><div class="mv" style="color:var(--rd)">High</div><div class="ms">Same cluster, perpetrator account</div></div>
+    <div class="mc"><div class="ml">Velocity Threshold Crossings</div><div class="mv" style="color:var(--yw)">3×</div><div class="ms">Before any downranking action</div></div>
+    <div class="mc"><div class="ml">Algorithmic Share of Impressions</div><div class="mv" style="color:var(--rd)">87.4%</div><div class="ms">of 146,400 total impressions</div></div>
+  </div>
+
+  <!-- Row 2: 3-col dashboard -->
+  <div style="display:grid;grid-template-columns:2fr 2fr 3fr;gap:9px;flex:1;min-height:0">
+
+    <!-- Col 1: Exposure decomposition -->
+    <div class="c" style="display:flex;flex-direction:column;min-height:0">
+      <div class="ct">📊 Exposure Decomposition — 90-Day Window</div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+        <div class="er"><div class="el">Organic / Search</div><div class="eb"><div class="ef" style="width:12.6%;background:var(--gn)"></div></div><div class="ev">18,400</div></div>
+        <div class="er"><div class="el">Personalized Rec.</div><div class="eb"><div class="ef" style="width:63.3%;background:var(--rd)"></div></div><div class="ev">92,700</div></div>
+        <div class="er"><div class="el">Autoplay Chain</div><div class="eb"><div class="ef" style="width:21.3%;background:var(--yw)"></div></div><div class="ev">31,200</div></div>
+        <div class="er" style="margin:0"><div class="el">Notification / Trending</div><div class="eb"><div class="ef" style="width:2.8%;background:var(--ac)"></div></div><div class="ev">4,100</div></div>
+        <div style="font-size:11px;color:var(--mu);border-top:1px solid var(--bd);margin-top:10px;padding-top:8px">
+          Algorithmic pathways account for <strong style="color:var(--rd)">87.4%</strong> of impressions vs. organic baseline of <strong style="color:var(--gn)">12.6%</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Col 2: Chart -->
+    <div class="c" style="display:flex;flex-direction:column;min-height:0">
+      <div class="ct">📈 Amplification Velocity — Weekly</div>
+      <div style="flex:1;min-height:0;position:relative">
+        <canvas id="velChart" style="position:absolute;inset:0;width:100%!important;height:100%!important"></canvas>
+      </div>
+    </div>
+
+    <!-- Col 3: Findings + summary + export -->
+    <div style="display:flex;flex-direction:column;gap:9px;min-height:0">
+
+      <div class="c" style="flex:1;min-height:0;display:flex;flex-direction:column">
+        <div class="ct">🔎 Auditor Findings</div>
+        <div style="flex:1;overflow:hidden">
+          <div class="note"><div class="nd" style="background:var(--rd)"></div><div><strong>Collaborative filtering loop</strong> — content cluster recommended to users who watched similar hostile content; self-reinforcing amplification, not passive hosting.</div></div>
+          <div class="note"><div class="nd" style="background:var(--rd)"></div><div><strong>Safety Override Lag</strong> — velocity threshold crossed 3× before any downranking (T−78d, T−52d, T−18d). 12-day gap after first report.</div></div>
+          <div class="note"><div class="nd" style="background:var(--yw)"></div><div><strong>Autoplay chain</strong> — 6 of 8 content objects accessed via autoplay without direct search. System extended session time within hostile cluster.</div></div>
+          <div class="note" style="border:none"><div class="nd" style="background:var(--yw)"></div><div><strong>Prior violations</strong> — 2 channel-level strikes in 180 days. Classifier flagged 3 videos as "borderline" but did not suppress recommendations.</div></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="ha ha-g"><div style="font-size:10px;font-weight:700;color:#3fb950;margin-bottom:4px">📦 Hosting (§230 protected)</div><ul><li>Video storage</li><li>Subscription feed</li><li>Direct search results</li><li>Channel page display</li></ul></div>
+        <div class="ha ha-r"><div style="font-size:10px;font-weight:700;color:#f85149;margin-bottom:4px">🔺 Amplification (above baseline)</div><ul><li>Personalized recommendation</li><li>Autoplay continuation</li><li>Engagement-optimized ranking</li><li>Notification delivery</li></ul></div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button class="btn bo" onclick="go(3)" style="flex-shrink:0">← Back</button>
+        <button class="btn bo" onclick="fd('Sealed_Report_AAT-2026-0041.pdf')" style="flex:1">↓ Sealed Technical Report</button>
+        <button class="btn bs" onclick="alert('Case AAT-2026-0041 submitted to court docket.')" style="flex:1">Submit to Court ✓</button>
+      </div>
+      <div id="exmsg" class="al als" style="display:none"></div>
+
+    </div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+let cur = 1;
+
+function go(n) {
+  document.getElementById('p'+cur).classList.remove('on');
+  document.getElementById('s'+cur).classList.remove('on');
+  if (n > cur) document.getElementById('s'+cur).classList.add('dn');
+  else for (let i=n; i<=4; i++) document.getElementById('s'+i).classList.remove('dn');
+  cur = n;
+  document.getElementById('p'+cur).classList.add('on');
+  document.getElementById('s'+cur).classList.add('on');
+  window.scrollTo(0,0);
+  if (n===4) initCharts();
+}
+
+function tc(el) { el.closest('.ci').classList.toggle('on', el.checked); }
+
+function sq(q, v) {
+  ['y','n','u'].forEach(k => document.getElementById('q'+q+k).classList.remove('yes','no','unk'));
+  const cls = v==='yes'?'yes':v==='no'?'no':'unk';
+  document.getElementById('q'+q+(v==='yes'?'y':v==='no'?'n':'u')).classList.add(cls);
+}
+
+function fakeUp() {
+  document.getElementById('upz').style.display='none';
+  document.getElementById('upmsg').style.display='block';
+}
+
+function fd(name) {
+  const t = document.getElementById('dtmsg') || document.getElementById('exmsg');
+  if(t){t.textContent='✔ '+name+' prepared for submission (prototype demo)';t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
+}
+
+// Charts
+let inited = false;
+function initCharts() {
+  if (inited) return; inited = true;
+  const ctx = document.getElementById('velChart').getContext('2d');
+  const weeks = ['T−90','T−83','T−76','T−69','T−62','T−55','T−48','T−41','T−34','T−27','T−20','T−13','T−7','T−1'];
+  new Chart(ctx, {
+    type:'line',
+    data:{
+      labels:weeks,
+      datasets:[{
+        label:'Algorithmic impressions',
+        data:[800,1200,2800,1900,2100,3600,2900,3100,4200,6100,8900,12400,7800,3200],
+        borderColor:'#da3633',backgroundColor:'#da363318',fill:true,tension:.4,
+        pointRadius:(c)=>[2,5,12].includes(c.dataIndex)?5:2,
+        pointBackgroundColor:(c)=>[2,5,12].includes(c.dataIndex)?'#da3633':'#da363388'
+      },{
+        label:'Organic baseline',
+        data:[650,700,720,740,760,780,800,820,830,850,870,890,900,910],
+        borderColor:'#238636',backgroundColor:'transparent',borderDash:[4,4],tension:.2,
+        pointRadius:2,pointBackgroundColor:'#238636'
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{color:'#8b949e',font:{size:10},boxWidth:10}},
+        tooltip:{mode:'index',intersect:false}
+      },
+      scales:{
+        x:{ticks:{color:'#8b949e',font:{size:9},maxRotation:0},grid:{color:'#30363d'}},
+        y:{ticks:{color:'#8b949e',font:{size:9}},grid:{color:'#30363d'}}
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
